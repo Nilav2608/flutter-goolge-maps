@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +9,6 @@ import 'package:maps_app/models/directions.model.dart';
 import 'package:maps_app/repo/directions_repository.dart';
 import 'package:maps_app/repo/map_repo.dart';
 import 'package:maps_app/widgets/bottom_card.dart';
-import 'package:http/http.dart' as http;
 
 class GoogleMapsPage extends StatefulWidget {
   const GoogleMapsPage({super.key});
@@ -152,7 +150,9 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
           // currentPosition == null
           //     ? const Center(child: CircularProgressIndicator())
           //     :
-          Stack(children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
         GoogleMap(
           onLongPress: (LatLng position) => addMarker(position),
           myLocationButtonEnabled: false,
@@ -181,7 +181,9 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
         ),
         if (info != null)
           Positioned(
-              top: 10,
+              top: 20,
+              left: 0,
+              right: 0,
               child: BottomCard(
                 distance: info!.totalDistance ?? '',
                 duration: info!.totalDuration ?? '',

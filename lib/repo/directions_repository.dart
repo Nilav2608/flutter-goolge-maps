@@ -18,7 +18,6 @@ class DirectionsRepository {
       'destination': '${destination.latitude},${destination.longitude}',
       'key': apiKey
     });
-    print(response.statusCode);
     if (response.statusCode == 200) {
       return Directions.fromMap(response.data);
     }
