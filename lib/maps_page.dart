@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 import 'package:maps_app/constants.dart';
 import 'package:maps_app/models/directions.model.dart';
 import 'package:maps_app/repo/directions_repository.dart';
 import 'package:maps_app/repo/map_repo.dart';
 import 'package:maps_app/widgets/bottom_card.dart';
+import 'package:maps_toolkit/maps_toolkit.dart' as map_tool;
 
 class GoogleMapsPage extends StatefulWidget {
   const GoogleMapsPage({super.key});
@@ -17,7 +17,6 @@ class GoogleMapsPage extends StatefulWidget {
   State<GoogleMapsPage> createState() => _GoogleMapsPageState();
 }
 
-final locationController = Location();
 const googlePlex = LatLng(37.422131, -122.084801);
 const applePark = LatLng(37.3346, -122.0090);
 
@@ -119,6 +118,33 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
     }
   }
 
+  bool inAvailableRegion = true;
+
+  List<LatLng> polygonPoints = [
+    const LatLng(37.501903, -122.236845),
+    const LatLng(37.440336, -122.245010),
+    const LatLng(37.370282, -122.142940),
+    const LatLng(37.229337, -121.978301),
+    const LatLng(37.261803, -121.804792),
+    const LatLng(37.498604, -121.920149),
+    const LatLng(37.651492, -122.067006),
+    const LatLng(37.607580, -122.187447),
+  ];
+
+  void checkUpdatedLocation(LatLng pointLatlng) {
+    List<map_tool.LatLng> convertedLatlng = polygonPoints
+        .map(
+          (points) => map_tool.LatLng(points.latitude, points.longitude),
+        )
+        .toList();
+    setState(() {
+      inAvailableRegion = map_tool.PolygonUtil.containsLocation(
+          map_tool.LatLng(pointLatlng.latitude, pointLatlng.longitude),
+          convertedLatlng,
+          false);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,11 +176,13 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
           // currentPosition == null
           //     ? const Center(child: CircularProgressIndicator())
           //     :
-          Stack(
-            alignment: Alignment.center,
-            children: [
+          Stack(alignment: Alignment.center, children: [
         GoogleMap(
-          onLongPress: (LatLng position) => addMarker(position),
+          onLongPress: (LatLng position) {
+            checkUpdatedLocation(position);
+              addMarker(position);
+            
+          },
           myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
           onMapCreated: (GoogleMapController controller) =>
@@ -178,15 +206,35 @@ class _GoogleMapsPageState extends State<GoogleMapsPage> {
                       .toList(),
                   width: 6)
           },
+          // circles: {
+          //   Circle(
+          //       circleId: const CircleId('1'),
+          //       center: googlePlex,
+          //       radius: 5000,
+          //       strokeColor: Colors.black54,
+          //       strokeWidth: 2,
+          //       fillColor:
+          //           const Color.fromARGB(255, 165, 215, 255).withOpacity(0.2))
+          // },
+          polygons: {
+            Polygon(
+                polygonId: const PolygonId("sillicon vally"),
+                points: polygonPoints,
+                strokeColor: Colors.black54,
+                strokeWidth: 2,
+                fillColor:
+                    const Color.fromARGB(255, 165, 215, 255).withOpacity(0.2))
+          },
         ),
         if (info != null)
           Positioned(
               top: 20,
               left: 0,
               right: 0,
-              child: BottomCard(
+              child: InfoCard(
                 distance: info!.totalDistance ?? '',
                 duration: info!.totalDuration ?? '',
+                isValidLocation: inAvailableRegion,
               ))
       ]),
       floatingActionButton: FloatingActionButton(
